@@ -1,0 +1,112 @@
+/* --- THIẾT KẾ & LAYOUT CƠ BẢN --- */
+body {
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.5s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex-grow: 1;
+}
+
+.card {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.table {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* --- HEADER & FOOTER HIỆN ĐẠI --- */
+header {
+    color: white;
+    padding: 30px 0;
+    border-radius: 0 0 50% 50%/0 0 100px 100px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    position: relative;
+    z-index: 10;
+}
+
+header h1 {
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+footer {
+    color: white;
+    padding: 60px 0 20px 0;
+    margin-top: 50px;
+    clip-path: ellipse(100% 100% at 50% 100%);
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+}
+
+footer a:hover {
+    opacity: 0.8;
+}
+
+/* --- HỆ THỐNG THEME MÀU SÁNG HƠN --- */
+
+/* Mặc định: Nền xanh cho trang Quản lý */
+.page-classes { background-color: #e3f2fd; }
+.page-classes header, .page-classes footer { background: linear-gradient(135deg, #64b5f6, #1976d2); }
+.page-classes .card-header { background: linear-gradient(135deg, #64b5f6, #1976d2); }
+.page-classes .total-teachers { color: #c62828; font-weight: 700; }
+
+/* Theme Chiên Con (Hồng) */
+.theme-chien-con { background-color: #ffe4e1; }
+.theme-chien-con header, .theme-chien-con footer { background: linear-gradient(135deg, #ff80ab, #f06292); }
+.theme-chien-con .table thead { background-color: #f06292; color: white; }
+.theme-chien-con .table-striped > tbody > tr:nth-of-type(odd) > * { background-color: #fff0f5; }
+.theme-chien-con .btn-theme { background-color: #f06292; color: white; border: none; }
+.theme-chien-con .btn-theme:hover { background-color: #ec407a; }
+
+/* Theme Ấu Nhi (Xanh Lá) */
+.theme-au-nhi { background-color: #e8f5e9; }
+.theme-au-nhi header, .theme-au-nhi footer { background: linear-gradient(135deg, #a5d6a7, #66bb6a); }
+.theme-au-nhi .table thead { background-color: #66bb6a; color: white; }
+.theme-au-nhi .table-striped > tbody > tr:nth-of-type(odd) > * { background-color: #f0fff0; }
+.theme-au-nhi .btn-theme { background-color: #66bb6a; color: white; border: none; }
+.theme-au-nhi .btn-theme:hover { background-color: #4caf50; }
+
+/* Theme Thiếu Nhi (Xanh Biển) */
+.theme-thieu-nhi { background-color: #e3f2fd; }
+.theme-thieu-nhi header, .theme-thieu-nhi footer { background: linear-gradient(135deg, #64b5f6, #1976d2); }
+.theme-thieu-nhi .table thead { background-color: #1976d2; color: white; }
+.theme-thieu-nhi .table-striped > tbody > tr:nth-of-type(odd) > * { background-color: #f0f8ff; }
+.theme-thieu-nhi .btn-theme { background-color: #1976d2; color: white; border: none; }
+.theme-thieu-nhi .btn-theme:hover { background-color: #1565c0; }
+
+/* Theme Nghĩa Sĩ (Vàng) */
+.theme-nghia-si { background-color: #fffde7; }
+.theme-nghia-si header, .theme-nghia-si footer { background: linear-gradient(135deg, #ffd54f, #ffb300); }
+.theme-nghia-si .table thead { background-color: #ffb300; color: white; }
+.theme-nghia-si .table-striped > tbody > tr:nth-of-type(odd) > * { background-color: #fffacd; }
+.theme-nghia-si .btn-theme { background-color: #ffb300; color: white; border: none; }
+.theme-nghia-si .btn-theme:hover { background-color: #ffa000; }
+
+/* Theme Hiệp Sĩ (Nâu) */
+.theme-hiep-si { background-color: #efebe9; }
+.theme-hiep-si header, .theme-hiep-si footer { background: linear-gradient(135deg, #a1887f, #795548); }
+.theme-hiep-si .table thead { background-color: #795548; color: white; }
+.theme-hiep-si .table-striped > tbody > tr:nth-of-type(odd) > * { background-color: #faf0e6; }
+.theme-hiep-si .btn-theme { background-color: #795548; color: white; border: none; }
+.theme-hiep-si .btn-theme:hover { background-color: #6d4c41; }
+
+/* --- MÀU SẮC BẢNG DANH SÁCH LỚP (TRANG CLASSES.PHP) --- */
+.table-hover > tbody > tr.nganh-chien-con { background-color: #ffcdd2 !important; }
+.table-hover > tbody > tr.nganh-au-nhi { background-color: #c8e6c9 !important; }
+.table-hover > tbody > tr.nganh-thieu-nhi { background-color: #b3e5fc !important; }
+.table-hover > tbody > tr.nganh-nghia-si { background-color: #ffecb3 !important; }
+.table-hover > tbody > tr.nganh-hiep-si { background-color: #d7ccc8 !important; }
