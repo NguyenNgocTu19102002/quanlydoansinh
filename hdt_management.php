@@ -9,6 +9,7 @@ if (!$logged_in) {
 }
 //1 con vịt
 //1 con vịt
+//2 con viỵ
 $conn = new mysqli("localhost", "root", "", "tntt_lap_tri");
 if ($conn->connect_error) { die("Kết nối thất bại: " . $conn->connect_error); }
 
