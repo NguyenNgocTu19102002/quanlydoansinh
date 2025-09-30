@@ -4,10 +4,10 @@ $logged_in = isset($_SESSION['user_id']);
 
 // Kiểm tra quyền truy cập - chỉ cho phép hdt_manager
 if (!$logged_in) {
-    header('Location: login.php');
+    header('Location: login.php  ');
     exit;
 }
-
+//1 con vịt
 $conn = new mysqli("localhost", "root", "", "tntt_lap_tri");
 if ($conn->connect_error) { die("Kết nối thất bại: " . $conn->connect_error); }
 
