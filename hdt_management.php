@@ -170,6 +170,114 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_hdt'])) {
     header("Location: hdt_management.php");
     exit;
 }
+
+// Xử lý import CSV
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_csv'])) {
+    if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['csv_file'];
+        $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        // Kiểm tra định dạng file
+        if ($file_extension !== 'csv') {
+            $_SESSION['error'] = "Chỉ chấp nhận file CSV.";
+            header("Location: hdt_management.php");
+            exit;
+        }
+        
+        // Đọc file CSV
+        $csv_data = [];
+        if (($handle = fopen($file['tmp_name'], "r")) !== FALSE) {
+            $header = fgetcsv($handle, 1000, ",");
+            $expected_headers = ['ho_ten', 'ten_thanh', 'ngay_sinh', 'gioi_tinh', 'so_dien_thoai', 'email', 'loai_huynh', 'vai_tro', 'ten_lop'];
+            
+            // Kiểm tra header
+            if (array_diff($expected_headers, $header)) {
+                $_SESSION['error'] = "File CSV không đúng định dạng. Cần có các cột: " . implode(', ', $expected_headers);
+                header("Location: hdt_management.php");
+                exit;
+            }
+            
+            $success_count = 0;
+            $error_count = 0;
+            $errors = [];
+            
+            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                if (count($data) < 9) continue; // Bỏ qua dòng không đủ cột
+                
+                $ho_ten = trim($data[0]);
+                $ten_thanh = trim($data[1]);
+                $ngay_sinh = trim($data[2]);
+                $gioi_tinh = trim($data[3]);
+                $so_dien_thoai = trim($data[4]);
+                $email = trim($data[5]);
+                $loai_huynh = trim($data[6]);
+                $vai_tro = trim($data[7]);
+                $ten_lop = trim($data[8]);
+                
+                // Validate dữ liệu
+                $row_errors = [];
+                if (empty($ho_ten)) $row_errors[] = "Họ tên không được để trống";
+                if (empty($ngay_sinh)) $row_errors[] = "Ngày sinh không được để trống";
+                if (!in_array($gioi_tinh, ['Nam', 'Nữ'])) $row_errors[] = "Giới tính phải là 'Nam' hoặc 'Nữ'";
+                if (!empty($so_dien_thoai) && !preg_match('/^\d{10}$/', $so_dien_thoai)) $row_errors[] = "SĐT phải gồm đúng 10 số";
+                if (!in_array($loai_huynh, ['Huynh Trưởng', 'Huynh Dự Trưởng'])) $row_errors[] = "Loại huynh phải là 'Huynh Trưởng' hoặc 'Huynh Dự Trưởng'";
+                if (empty($ten_lop)) $row_errors[] = "Tên lớp không được để trống";
+                
+                // Tìm class_id từ tên lớp
+                $class_result = $conn->query("SELECT id FROM classes WHERE ten_lop = '" . $conn->real_escape_string($ten_lop) . "'");
+                if (!$class_result || $class_result->num_rows === 0) {
+                    $row_errors[] = "Không tìm thấy lớp: $ten_lop";
+                } else {
+                    $class_id = $class_result->fetch_assoc()['id'];
+                }
+                
+                if (!empty($row_errors)) {
+                    $error_count++;
+                    $errors[] = "Dòng " . ($success_count + $error_count) . " - " . implode(', ', $row_errors);
+                    continue;
+                }
+                
+                // Thêm vào database
+                if ($has_loai_huynh) {
+                    $sql_teacher = "INSERT INTO teachers (ho_ten, ten_thanh, ngay_sinh, gioi_tinh, so_dien_thoai, email, loai_huynh) 
+                                    VALUES ('" . $conn->real_escape_string($ho_ten) . "', '" . $conn->real_escape_string($ten_thanh) . "', '" . $conn->real_escape_string($ngay_sinh) . "', '" . $conn->real_escape_string($gioi_tinh) . "', '" . $conn->real_escape_string($so_dien_thoai) . "', '" . $conn->real_escape_string($email) . "', '" . $conn->real_escape_string($loai_huynh) . "')";
+                } else {
+                    $sql_teacher = "INSERT INTO teachers (ho_ten, ten_thanh, ngay_sinh, so_dien_thoai, email) 
+                                    VALUES ('" . $conn->real_escape_string($ho_ten) . "', '" . $conn->real_escape_string($ten_thanh) . "', '" . $conn->real_escape_string($ngay_sinh) . "', '" . $conn->real_escape_string($so_dien_thoai) . "', '" . $conn->real_escape_string($email) . "')";
+                }
+                
+                if ($conn->query($sql_teacher)) {
+                    $teacher_id = $conn->insert_id;
+                    $sql_class_teacher = "INSERT INTO class_teachers (class_id, teacher_id, vai_tro) VALUES ($class_id, $teacher_id, '" . $conn->real_escape_string($vai_tro) . "')";
+                    if ($conn->query($sql_class_teacher)) {
+                        $success_count++;
+                    } else {
+                        $error_count++;
+                        $errors[] = "Dòng " . ($success_count + $error_count) . " - Lỗi thêm vào class_teachers: " . $conn->error;
+                    }
+                } else {
+                    $error_count++;
+                    $errors[] = "Dòng " . ($success_count + $error_count) . " - Lỗi thêm vào teachers: " . $conn->error;
+                }
+            }
+            fclose($handle);
+            
+            // Hiển thị kết quả
+            if ($success_count > 0) {
+                $_SESSION['success'] = "Import thành công $success_count huynh trưởng/dự trưởng.";
+            }
+            if ($error_count > 0) {
+                $_SESSION['error'] = "Có $error_count dòng lỗi. Chi tiết: " . implode('; ', array_slice($errors, 0, 5)) . (count($errors) > 5 ? '...' : '');
+            }
+        } else {
+            $_SESSION['error'] = "Không thể đọc file CSV.";
+        }
+    } else {
+        $_SESSION['error'] = "Vui lòng chọn file CSV để upload.";
+    }
+    header("Location: hdt_management.php");
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -236,6 +344,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_hdt'])) {
                         <a href="hdt_attendance.php" class="btn btn-warning btn-uniform me-2">
                             <i class="fa-solid fa-clipboard-check me-2"></i>Điểm Danh
                         </a>
+                        <button class="btn btn-info btn-uniform me-2" data-bs-toggle="modal" data-bs-target="#importCSVModal">
+                            <i class="fa-solid fa-file-csv me-2"></i>Import CSV
+                        </button>
                         <button class="btn btn-success btn-uniform" data-bs-toggle="modal" data-bs-target="#addHDTModal">
                             <i class="fa-solid fa-plus me-2"></i>Thêm Huynh Trưởng/Dự Trưởng
                         </button>
@@ -455,6 +566,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_hdt'])) {
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Lưu</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import CSV -->
+    <div class="modal fade" id="importCSVModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Import Huynh Trưởng/Dự Trưởng từ CSV</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fa-solid fa-info-circle me-2"></i>Hướng dẫn sử dụng:</h6>
+                        <ul class="mb-0">
+                            <li>File CSV phải có định dạng UTF-8</li>
+                            <li>Các cột bắt buộc: ho_ten, ten_thanh, ngay_sinh, gioi_tinh, so_dien_thoai, email, loai_huynh, vai_tro, ten_lop</li>
+                            <li>Ngày sinh định dạng: YYYY-MM-DD (ví dụ: 2000-01-15)</li>
+                            <li>Giới tính: Nam hoặc Nữ</li>
+                            <li>Loại huynh: Huynh Trưởng hoặc Huynh Dự Trưởng</li>
+                            <li>SĐT phải gồm đúng 10 số (có thể để trống)</li>
+                            <li>Tên lớp phải tồn tại trong hệ thống</li>
+                        </ul>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data" id="importCSVForm">
+                        <input type="hidden" name="import_csv" value="1">
+                        <div class="mb-3">
+                            <label class="form-label">Chọn file CSV</label>
+                            <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+                            <div class="form-text">Chỉ chấp nhận file .csv</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <a href="download_sample_csv.php" class="btn btn-outline-primary">
+                                <i class="fa-solid fa-download me-2"></i>Tải file mẫu CSV
+                            </a>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-upload me-2"></i>Import CSV
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

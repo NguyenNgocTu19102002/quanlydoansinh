@@ -2,9 +2,9 @@
 session_start();
 $logged_in = isset($_SESSION['user_id']);
 
-// Lấy lời chúa hằng ngày
-require_once 'loi_chua_fetcher.php';
-$loi_chua = (new LoiChuaFetcher())->fetchTinMung();
+// Lấy lời chúa hằng ngày (mô phỏng Selenium)
+require_once 'loi_chua_fetcher_selenium.php';
+$loi_chua = (new LoiChuaFetcherSelenium())->fetchTinMung();
 ?>
 
 <!DOCTYPE html>
