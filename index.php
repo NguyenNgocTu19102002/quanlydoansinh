@@ -1,6 +1,10 @@
 <?php
 session_start();
 $logged_in = isset($_SESSION['user_id']);
+
+// Lấy lời chúa hằng ngày
+require_once 'loi_chua_fetcher.php';
+$loi_chua = (new LoiChuaFetcher())->fetchTinMung();
 ?>
 
 <!DOCTYPE html>
@@ -11,6 +15,7 @@ $logged_in = isset($_SESSION['user_id']);
     <title>ĐOÀN TNTT ĐAMINH SAVIO LẬP TRÍ</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
         body {
@@ -215,7 +220,14 @@ $logged_in = isset($_SESSION['user_id']);
                 <div class="card">
                     <div class="card-header">Lời Chúa Hàng Ngày</div>
                     <div class="card-body">
-                        <p>Đang tải Lời Chúa...</p>
+                        <div class="loi-chua-content" style="max-height: 300px; overflow-y: auto; font-size: 0.9rem; line-height: 1.4;">
+                            <pre style="white-space: pre-wrap; font-family: inherit; margin: 0; background: none; border: none; padding: 0;"><?= htmlspecialchars($loi_chua) ?></pre>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar"></i> Ngày: <?= date('d/m/Y') ?>
+                            </small>
+                        </div>
                     </div>
                 </div>
             </div>
